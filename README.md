@@ -1,6 +1,6 @@
 # Sideband Audio
 
-Sideband Audio is a Swift package for processing spoken-word audio on iOS 17 and macOS 14. It provides pitch-preserving speed from 0.5x to 5x, silence shortening, voice EQ and compression, noise reduction, loudness normalization, de-essing and up to 12 custom EQ bands. A C11 engine does the processing and tags every output frame with its position in the original file, so a player can show file time and heard silence savings at any speed.
+Sideband Audio is a Swift package for spoken-word playback on iOS and macOS. Listeners finish sooner with pitch-preserving speed from 0.5x to 5x and shorter silences. Voice EQ and compression, noise reduction, de-essing and loudness normalization keep speech clear and even, and up to 12 custom EQ bands let listeners set their own tone. Your player shows correct file position after speed changes and removed pauses. Built in C on preallocated buffers and Accelerate, it spares your team the DSP work.
 
 <img src="Documentation/Images/Demo.jpg" alt="Sideband Audio demo" width="360">
 
