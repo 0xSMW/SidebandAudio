@@ -127,6 +127,48 @@ import SBEngine
         let config = AudioConfiguration.speech
         #expect(try JSONDecoder().decode(AudioConfiguration.self, from: JSONEncoder().encode(config)) == config)
     }
+    @Test func silenceSensitivityDefaultsValidationAndEngineMapping() throws {
+        #expect(AudioConfiguration().silenceSensitivity == 0.5)
+        #expect(AudioConfiguration.speech.silenceSensitivity == 0.5)
+        #expect(sb_engine_default_config().silence_sensitivity == 0.5)
+        for sensitivity in [0.0, 0.5, 1.0] {
+            let config = try AudioConfiguration(silenceSensitivity: sensitivity).validated()
+            #expect(config.engineConfiguration().silence_sensitivity == Float(sensitivity))
+        }
+        for sensitivity in [-0.01, 1.01, Double.nan, .infinity, -.infinity] {
+            #expect(throws: AudioProcessingError.invalidConfiguration("silenceSensitivity")) {
+                try AudioConfiguration(silenceSensitivity: sensitivity).validated()
+            }
+        }
+    }
+    @Test func silenceSensitivityCodablePreservesLegacyConfiguration() throws {
+        let config = AudioConfiguration(rate: 1.75, shortenSilence: true, silenceSensitivity: 0.83,
+            voiceEnhancement: true, mono: true, noiseReduction: 0.22, normalizationEnabled: true,
+            normalizationTargetLUFS: -16, deEsser: .strong,
+            equalizer: [.init(frequency: 800, q: 1.2, gainDB: 3)])
+        let encoder = JSONEncoder(), decoder = JSONDecoder()
+        let encoded = try encoder.encode(config)
+        #expect(try decoder.decode(AudioConfiguration.self, from: encoded) == config)
+
+        var legacy = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacy.removeValue(forKey: "silenceSensitivity")
+        var expected = config
+        expected.silenceSensitivity = 0.5
+        #expect(try decoder.decode(AudioConfiguration.self,
+            from: JSONSerialization.data(withJSONObject: legacy)) == expected)
+
+        var nullSensitivity = legacy
+        nullSensitivity["silenceSensitivity"] = NSNull()
+        #expect(throws: DecodingError.self) {
+            try decoder.decode(AudioConfiguration.self,
+                from: JSONSerialization.data(withJSONObject: nullSensitivity))
+        }
+        legacy.removeValue(forKey: "rate")
+        #expect(throws: DecodingError.self) {
+            try decoder.decode(AudioConfiguration.self,
+                from: JSONSerialization.data(withJSONObject: legacy))
+        }
+    }
     @Test func monoMixAndBorrowedMonoAlias() throws {
         let input = tone(48_000)
         let mono = try render([input, input.map { -$0 }], configuration: .init(mono: true))
