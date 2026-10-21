@@ -16,10 +16,15 @@ Sideband supplies codec decoding, network transport and audio-device output sepa
   numerically close candidates using the original ordered double sum, preserving lag
   decisions and first-best ties. Joint-channel correlation preserves
   antiphase stereo. Exact unity uses untouched PCM after upstream processing.
-- **Smart Speed:** post-mastering peak detection across both channels, in stable 4096-frame
-  blocks. Each accepted 148-frame quiet window becomes a 46-frame linear splice, removing
-  102 frames. Detection uses the full window, including audio ahead of the splice. These
-  are fixed sample counts, as recovered from Overcast, rather than millisecond windows.
+- **Smart Speed:** `silence_sensitivity` ranges from 0 to 1 and defaults to 0.5. At 0,
+  strict legacy detection uses post-mastering peaks across both channels in stable
+  4096-frame blocks. Each accepted 148-frame quiet window becomes a 46-frame linear splice,
+  removing 102 frames. Above 0, adaptive detection analyzes 10 ms windows of the original input against observed
+  noise and speech. Higher sensitivity allows noisier pauses. A cut requires 200 ms of
+  confirmed quiet and retains 60 ms leading and trailing guards. The detector looks ahead
+  240 ms, uses per-channel energy, voicing, and short-term variation checks, and retains incomplete EOF windows.
+  These checks reduce speech cuts but cannot guarantee speech preservation in every recording.
+  Detection sensitivity is independent of spectral noise reduction.
 - **Voice Boost EQ:** 80 Hz high-pass/Q .5; 1635 Hz/−3 dB/Q .8; 9000 Hz/−4 dB/Q 1.4;
   16 kHz low-pass/Q .5. Custom bands precede these filters.
 - **Normalization:** Sideband has an independent on/off control and −20…−6 LUFS target,
@@ -74,8 +79,9 @@ buffering, rather than limiting the length of a push.
    push. Sideband reuses its cached/live measurement across seeks and speed changes,
    avoiding a fresh unity-gain period while the 400 ms meter fills. Off remains unity.
 
-DSP latency is `1024 + ceil(sampleRate × .010)` input frames; fixed blocks and WSOLA
-also buffer ahead. This delays availability of output, not its logical timestamp. The
+DSP latency starts at `1024 + ceil(sampleRate × .010)` input frames. Smart Speed with
+nonzero sensitivity adds 24 analysis windows, approximately 240 ms, to the reported latency.
+Fixed blocks and WSOLA also buffer ahead. This delays availability of output, not its logical timestamp. The
 Swift adapter accumulates valid returned PCM on a decode queue, then the player schedules
 it directly to the output mixer. It never subtracts that buffering latency from timestamps.
 
@@ -87,14 +93,35 @@ outputs PCM through AVAudioPlayerNode. Original comparison playback bypasses the
 processor entirely. The host owns document access, AVAudioSession and system controls.
 There is no network or download implementation in this repository.
 
+Swift `AudioConfiguration.silenceSensitivity` exposes the C detector control with the same
+0...1 range and 0.5 default. Saved configurations missing this field decode with the default.
+`LocalFilePlayer.effectiveRate` divides original-media progress by actual heard output
+duration over roughly the most recent 2.5 output seconds. It includes selected speed and
+removed pauses, falls back to the selected speed before playback, and returns 1 in Original
+mode. Seeks and output-generation resets clear its measurement window.
+
 ## Validation
 
 Run `sh Tests/CEngine/run.sh` from the repository root for the standalone
-nine address/undefined-behavior sanitizer gates (including correlation decisions, mono
+ten address/undefined-behavior sanitizer gates (including correlation decisions, mono
 recurrences, C clock runs and audible EOF callbacks). Apple standalone executables link Accelerate. Run
 `swift test --no-parallel` for the independent Swift facade and local-file player regression suite.
 
-Verified on October 18, 2026 with deterministic offline PCM:
+Verified on October 21, 2026:
+
+- All ten C gates passed with AddressSanitizer and UndefinedBehaviorSanitizer, using both
+  Accelerate and the portable implementation.
+- All 37 Swift tests and four demo UI tests passed. Coverage includes heard-rate updates,
+  seeking, comparison modes, EOF, and replay.
+- The unpadded 11.480544-second demo recording shortens by 0.398503 seconds at 1x with
+  default sensitivity. All three annotated internal pauses shorten. Source frames and
+  mastered PCM outside the annotated pause regions are retained exactly.
+- The same pause mappings are produced with maximum noise reduction. Synthetic tests
+  cover quiet vowels, breathy bursts, hum, stereo vetoes, boundary guards, streaming
+  invariance, and 8, 44.1, 48, and 192 kHz input.
+
+Earlier DSP measurements from October 18, 2026 used deterministic offline PCM and the
+legacy quiet-only detector:
 
 | Measurement | Result |
 |---|---|
@@ -109,8 +136,6 @@ Verified on October 18, 2026 with deterministic offline PCM:
 | Strong de-esser fixture | 8 kHz −6.68 dB; 800 Hz −0.00 dB |
 | Limiter fixture | Peak 0.922571 (−0.7 dBFS) |
 | Stationary-noise fixture | Residual −4.74 dB; harmonic −2.39 dB |
-
-Final integration verification: 448 Swift tests across 90 suites passed. Signed Sideband Release 1.0 build 95 passed deep/strict signature verification; the app was not installed.
 
 These are synthetic test measurements, not an audition or an Overcast null comparison.
 
