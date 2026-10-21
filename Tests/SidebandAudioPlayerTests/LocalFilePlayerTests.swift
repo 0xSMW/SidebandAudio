@@ -44,6 +44,7 @@ struct LocalFilePlayerTests {
         #expect(player.state == .ready)
         #expect(player.position == 0)
         #expect(player.silenceSaved == 0)
+        #expect(player.effectiveRate == 1)
         player.stop()
         #expect(player.state == .idle)
         #expect(player.fileURL == nil)
@@ -68,6 +69,7 @@ struct LocalFilePlayerTests {
         try await Task.sleep(for: .milliseconds(350))
         #expect(player.mode == .original)
         #expect(player.configuration == config)
+        #expect(player.effectiveRate == 1)
         #expect(player.state == .paused)
         #expect(abs(player.position - 0.4) < 0.001)
         #expect(player.silenceSaved == 0)
@@ -75,6 +77,7 @@ struct LocalFilePlayerTests {
         try await Task.sleep(for: .milliseconds(350))
         #expect(player.state == .paused)
         #expect(abs(player.position - 0.4) < 0.001)
+        #expect(player.effectiveRate == 2.5)
         player.seek(to: .infinity)
         #expect(player.position == 0)
         player.seek(to: -10)
@@ -246,6 +249,7 @@ struct LocalFilePlayerTests {
         #expect(player.configuration.rate == 1.5)
         #expect(abs(player.position - 0.6) < 0.001)
         #expect(player.silenceSaved == 0)
+        #expect(player.effectiveRate == 1)
         player.stop()
     }
 
@@ -290,6 +294,124 @@ struct LocalFilePlayerTests {
         do { try await player.load(fileURL: fixture.url); Issue.record("Malformed audio was accepted") }
         catch { if case .open = error as? PlayerFailure {} else { Issue.record("Expected open failure: \(error)") } }
         player.stop()
+    }
+
+    @Test func unheardRateFollowsPreferencesThroughSeekRecoveryFailureAndReload() async throws {
+        let fixture = try Fixture(seconds: 1)
+        let empty = try Fixture(seconds: 0)
+        defer { fixture.cleanUp(); empty.cleanUp() }
+        let player = LocalFilePlayer(configuration: .init(rate: 1.5))
+        #expect(player.effectiveRate == 1.5)
+        try await player.load(fileURL: fixture.url)
+        var configuration = player.configuration
+        configuration.rate = 2
+        try player.configure(configuration)
+        player.pause()
+        player.seek(to: 0.7)
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(player.effectiveRate == 2)
+        try await player.recoverAfterMediaServicesReset()
+        #expect(player.effectiveRate == 2)
+        #expect(abs(player.position - 0.7) < 0.001)
+        do { try await player.load(fileURL: empty.url); Issue.record("Empty audio was accepted") }
+        catch { #expect(player.effectiveRate == 2) }
+        try await player.load(fileURL: fixture.url)
+        #expect(player.effectiveRate == 2)
+        #expect(player.position == 0)
+        player.stop()
+        #expect(player.effectiveRate == 2)
+        player.setMode(.original)
+        #expect(player.effectiveRate == 1)
+    }
+}
+
+/// Deterministic heard-clock probes exercise metadata without requiring audio hardware.
+@Suite struct EffectivePlaybackRateTests {
+    @Test func rateChangesUseHeardMetadataAndAgeOutOfTheRecentWindow() {
+        var window = EffectivePlaybackRateWindow()
+        window.reset(sampleRate: 100, sourceFrame: 0)
+        #expect(window.rate == nil)
+        window.record(outputFrame: 100, sourceFrame: 100) // One heard second at 1x.
+        window.record(outputFrame: 200, sourceFrame: 300) // One heard second at 2x.
+        #expect(window.rate == 1.5)
+        window.record(outputFrame: 250, sourceFrame: 400)
+        #expect(window.rate == 1.6)
+        for frame in stride(from: 300, through: 500, by: 50) {
+            window.record(outputFrame: Int64(frame), sourceFrame: Double(frame * 2 - 100))
+        }
+        #expect(window.rate == 2)
+    }
+
+    @Test func pausedClockAndQueuedSilenceCannotIncreaseRate() throws {
+        let timeline = try AudioTimeline()
+        let chunk = ProcessedAudio(channels: [[Float](repeating: 0, count: 300)],
+            sourceFrames: (0..<300).map { Double($0 < 150 ? $0 : $0 + 300) },
+            silenceSavedFrames: (0..<300).map { $0 < 150 ? 0 : 300 })
+        try timeline.append(chunk)
+        var window = EffectivePlaybackRateWindow()
+        window.reset(sampleRate: 100, sourceFrame: 0)
+        window.record(outputFrame: 100, sourceFrame: timeline.original(at: 100))
+        #expect(window.rate == 1)
+        // Repeated snapshots while paused cannot consume the queued cut at output frame 150.
+        for _ in 0..<20 { window.record(outputFrame: 100, sourceFrame: timeline.original(at: 100)) }
+        #expect(window.rate == 1)
+        window.record(outputFrame: 200, sourceFrame: timeline.original(at: 200))
+        #expect(window.rate == 2.5)
+    }
+
+    @Test func discreteCutIsSpreadOverTheRecentWindowAndThenExpires() {
+        var window = EffectivePlaybackRateWindow()
+        window.reset(sampleRate: 1_000, sourceFrame: 0)
+        for frame in stride(from: 100, through: 2_500, by: 100) {
+            window.record(outputFrame: Int64(frame), sourceFrame: Double(frame))
+        }
+        #expect(window.rate == 1)
+        window.record(outputFrame: 2_600, sourceFrame: 5_600) // Three source seconds skipped.
+        #expect(window.rate == 2.2)
+        // One more heard frame cannot turn the cut into an instantaneous thousands-x spike.
+        window.record(outputFrame: 2_601, sourceFrame: 5_601)
+        #expect(abs((window.rate ?? 0) - 2.2) < 0.001)
+        for frame in stride(from: 2_700, through: 5_200, by: 100) {
+            window.record(outputFrame: Int64(frame), sourceFrame: Double(frame + 3_000))
+        }
+        #expect(window.rate == 1)
+    }
+
+    @Test func seekAndGenerationResetsExcludeSourceJumpsAndPreviousRates() {
+        var window = EffectivePlaybackRateWindow()
+        window.reset(sampleRate: 100, sourceFrame: 0)
+        window.record(outputFrame: 100, sourceFrame: 300)
+        #expect(window.rate == 3)
+        // A seek/rebuild starts a new output generation at the actual source position.
+        window.reset(sampleRate: 100, sourceFrame: 90_000)
+        #expect(window.rate == nil)
+        window.record(outputFrame: 100, sourceFrame: 90_150)
+        #expect(window.rate == 1.5)
+        window.reset(sampleRate: 100, sourceFrame: 200)
+        window.record(outputFrame: 100, sourceFrame: 300)
+        #expect(window.rate == 1)
+    }
+
+    @Test func realProcessedMetadataCombinesSpeedAndHeardSilenceSavings() throws {
+        let sampleRate = 24_000.0
+        let tone = (0..<24_000).map { Float(0.2 * sin(2 * .pi * 240 * Double($0) / sampleRate)) }
+        let input = tone + [Float](repeating: 0, count: 48_000) + tone
+        let processor = try AudioProcessor(sampleRate: sampleRate, channelCount: 1,
+            configuration: .init(rate: 1.5, shortenSilence: true))
+        let timeline = try AudioTimeline()
+        try timeline.append(processor.process([input]))
+        try timeline.append(processor.finish())
+        var window = EffectivePlaybackRateWindow()
+        window.reset(sampleRate: sampleRate, sourceFrame: 0)
+        let beforeCut: Int64 = 4_000
+        window.record(outputFrame: beforeCut, sourceFrame: timeline.original(at: beforeCut))
+        #expect(abs((window.rate ?? 0) - 1.5) < 0.01)
+        #expect(timeline.silenceSaved(at: beforeCut) == 0)
+        let heard = timeline.outputEnd
+        window.record(outputFrame: heard, sourceFrame: timeline.original(at: heard))
+        #expect(timeline.silenceSaved(at: heard) > 20_000)
+        #expect((window.rate ?? 0) > 1.5)
+        #expect(abs((window.rate ?? 0) - timeline.original(at: heard) / Double(heard)) < 0.001)
     }
 }
 
