@@ -40,7 +40,7 @@ static Render render(const float *l,const float *r,size_t n,SBEngineConfig confi
     return out;
 }
 static void release(Render *r){free(r->l);free(r->r);free(r->source);free(r->saved);}
-static SBEngineConfig bypass(void){SBEngineConfig c=sb_engine_default_config();c.smart_speed=0;c.voice_boost=0;c.normalization_mode=1;return c;}
+static SBEngineConfig bypass(void){SBEngineConfig c=sb_engine_default_config();c.smart_speed=0;c.silence_sensitivity=0;c.voice_boost=0;c.normalization_mode=1;return c;}
 /* Reference the original maximum-window algorithm across voiced/quiet boundaries,
    exact-threshold samples, stereo vetoes, block edges, and a partial EOF block. */
 static void mixed_smart_windows(void) {
