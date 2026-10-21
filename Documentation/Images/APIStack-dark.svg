@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="760" viewBox="0 0 1080 760" role="img" aria-labelledby="title desc">
+<title id="title">Sideband Audio integration stack</title>
+<desc id="desc">Horizontal arrows connect each layer's input to its output. Vertical dashed arrows show dependencies: the optional local-file player uses the Swift PCM processor, which uses the C engine. The player supplies playback and timing in seconds. Swift and C integrations supply processed PCM and source-clock metadata for the host's output. The app owns file access, audio sessions, interruptions and system media controls.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#8b9bac"/></marker></defs>
+<style>
+text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; fill: #f0f3f6; }
+.heading { font-size: 18px; font-weight: 600; fill: #b7c2ce; }
+.title { font-size: 25px; font-weight: 700; }
+.strong { font-size: 20px; font-weight: 600; }
+.body { font-size: 19px; }
+.small { font-size: 17px; }
+.code { font-size: 18px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.note { font-size: 17px; fill: #b7c2ce; }
+</style>
+<rect width="1080" height="760" rx="12" fill="#0d1117"/>
+<text class="heading" x="24" y="40">INPUT</text>
+<text class="heading" x="264" y="40">SDK STACK</text>
+<text class="heading" x="776" y="40">OUTPUT</text>
+<rect x="24" y="72" width="200" height="168" rx="10" fill="#0d1117" stroke="#536171"/>
+<rect x="264" y="72" width="472" height="168" rx="10" fill="#161d26" stroke="#536171"/>
+<rect x="776" y="72" width="280" height="168" rx="10" fill="#0d1117" stroke="#536171"/>
+<path d="M228 156.0 H256" fill="none" stroke="#8b9bac" stroke-width="1.5" marker-end="url(#arrow)"/><path d="M740 156.0 H768" fill="none" stroke="#8b9bac" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text class="strong" x="40" y="126">Local file</text>
+<text class="body" x="40" y="156">Completed audio</text>
+<text class="code" x="40" y="186">fileURL</text>
+<text class="title" x="284" y="112">SidebandAudioPlayer</text>
+<text class="code" x="284" y="149">LocalFilePlayer</text>
+<text class="small" x="284" y="178">AVAudioFile decoding + AVAudioEngine output</text>
+<text class="body" x="284" y="207">Original / Processed · observable state</text>
+<text class="strong" x="792" y="111">Audio + playback state</text>
+<text class="code" x="792" y="140">position / duration</text>
+<text class="code" x="792" y="169">silenceSaved</text>
+<text class="body" x="792" y="198">Original-media seconds</text>
+<path d="M500 243 V281" fill="none" stroke="#8b9bac" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+<text class="note" x="514" y="269">uses</text>
+<rect x="24" y="288" width="200" height="184" rx="10" fill="#0d1117" stroke="#536171"/>
+<rect x="264" y="288" width="472" height="184" rx="10" fill="#161d26" stroke="#536171"/>
+<rect x="776" y="288" width="280" height="184" rx="10" fill="#0d1117" stroke="#536171"/>
+<path d="M228 380.0 H256" fill="none" stroke="#8b9bac" stroke-width="1.5" marker-end="url(#arrow)"/><path d="M740 380.0 H768" fill="none" stroke="#8b9bac" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text class="strong" x="40" y="342">Your decoder</text>
+<text class="body" x="40" y="372">Planar Float32 PCM</text>
+<text class="body" x="40" y="402">8–192 kHz</text>
+<text class="body" x="40" y="432">Mono or stereo</text>
+<text class="title" x="284" y="328">SidebandAudio</text>
+<text class="body" x="284" y="365">AudioConfiguration · speech controls</text>
+<text class="body" x="284" y="394">AudioProcessor · PCM in and out</text>
+<text class="small" x="284" y="423">AudioTimeline · played frames to file time</text>
+<text class="strong" x="792" y="327">Processed PCM</text>
+<text class="body" x="792" y="356">Owned or borrowed buffers</text>
+<text class="body" x="792" y="385">Source clock in frames</text>
+<text class="body" x="792" y="414">Played frames → file time</text>
+<path d="M500 475 V513" fill="none" stroke="#8b9bac" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+<text class="note" x="514" y="501">uses</text>
+<rect x="24" y="520" width="200" height="168" rx="10" fill="#0d1117" stroke="#536171"/>
+<rect x="264" y="520" width="472" height="168" rx="10" fill="#161d26" stroke="#536171"/>
+<rect x="776" y="520" width="280" height="168" rx="10" fill="#0d1117" stroke="#536171"/>
+<path d="M228 604.0 H256" fill="none" stroke="#8b9bac" stroke-width="1.5" marker-end="url(#arrow)"/><path d="M740 604.0 H768" fill="none" stroke="#8b9bac" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text class="strong" x="40" y="574">C buffers</text>
+<text class="body" x="40" y="604">Planar float PCM</text>
+<text class="body" x="40" y="634">Mono or stereo</text>
+<text class="title" x="284" y="560">SBEngine</text>
+<text class="body" x="284" y="597">Tempo · silence shortening · voice DSP</text>
+<text class="small" x="284" y="626">EQ · noise reduction · loudness · de-essing</text>
+<text class="code" x="284" y="655">sb_engine_* · sb_timeline_*</text>
+<text class="strong" x="792" y="559">Processed PCM</text>
+<text class="code" x="792" y="588">source_frames</text>
+<text class="code" x="792" y="617">silence_saved_frames</text>
+<text class="body" x="792" y="646">Original-media frames</text>
+<text class="note" x="24" y="726">Your app owns file access, audio sessions, interruptions and system media controls.</text>
+</svg>

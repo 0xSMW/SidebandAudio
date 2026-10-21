@@ -8,15 +8,10 @@ Sideband Audio is a Swift package for spoken-word playback on iOS and macOS. Lis
 
 Choose `SidebandAudioPlayer` to play local files, `SidebandAudio` to process PCM you decode yourself, or `SBEngine` to call the engine from C. The player uses the Swift processor, which wraps the C engine.
 
-```mermaid
-flowchart TB
-    Player["<b>SidebandAudioPlayer</b><br/>Optional Swift player for local files"]
-    Processor["<b>SidebandAudio</b><br/>Swift PCM processor and timeline"]
-    Engine["<b>SBEngine</b><br/>C11 DSP engine and source clock"]
-
-    Player -- depends on --> Processor
-    Processor -- depends on --> Engine
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="Documentation/Images/APIStack-dark.svg">
+  <img src="Documentation/Images/APIStack-light.svg" alt="Sideband Audio stack showing each integration layer, its inputs, responsibilities and outputs" width="1080">
+</picture>
 
 - `SidebandAudio` (Swift, Foundation)
   - Settings: `AudioConfiguration` holds the speech controls. `rate` is a 0.5...5 speed multiplier, `noiseReduction` is 0...1 and `normalizationTargetLUFS` is in LUFS. Up to 12 `EQBand` values set frequency in Hz, gain in dB and unitless Q. `EQBand.Kind` selects the filter shape and `DeEsser` selects sibilance reduction strength.
@@ -36,21 +31,40 @@ flowchart TB
 
 Combine speed, silence shortening, speech processing and EQ in one `AudioConfiguration`.
 
-- Listeners finish episodes sooner.
-  - Start with `.speech`, increase pitch-preserving `rate` and apply the configuration with `LocalFilePlayer.configure(_:)`. The preset combines silence shortening, voice enhancement and normalization. Show `silenceSaved` as a silence-savings readout.
-  - `setMode(.original)` plays the file at 1x without processing, so listeners can compare. `.processed` restores their settings.
-- Speech stays clear and even from one episode to the next.
-  - `voiceEnhancement` with `normalizationEnabled` and `normalizationTargetLUFS` brings shows to a similar level. Add `noiseReduction` for steady background noise, `deEsser` for sibilance and `mono` to center a recording heard on one side.
-  - Drive a loudness meter from `measuredLoudness` or `AudioProcessor.loudness`.
-- Listeners set their own tone and save it.
-  - Build an EQ editor from up to 12 `EQBand` values, with each shape chosen by `EQBand.Kind`. `equalizerGainDB(at:sampleRate:)` returns the custom EQ curve to draw.
-  - `AudioConfiguration` is `Codable`, so your app can store named presets itself. Check them with `validated()` before applying.
-- Scrubbers, chapters and transcripts show the right time after speed changes and removed pauses.
-  - `LocalFilePlayer` `position`, `duration` and `seek(to:)` use original-media seconds, so they match your own chapter and transcript times.
-  - In your own pipeline, `AudioTimeline.original(at:)` maps played output frames to source frames. Divide by the sample rate for seconds. Call `played(_:)` as playback advances and query `silenceSaved(at:)` at the played frame count for silence savings the listener has heard.
-- Your existing player or exporter gets the same speech processing.
-  - Pass decoded chunks to `AudioProcessor.process(_:)` and `finish()`, then send the output to your player or file writer. Your app keeps its decoder, output and encoder.
-  - `SBEngine` provides the same processing from C.
+### Listeners finish episodes sooner.
+
+Combine faster playback with shorter pauses so listeners can finish long recordings in less time.
+
+- Start with `.speech`, increase pitch-preserving `rate` and apply the configuration with `LocalFilePlayer.configure(_:)`. The preset combines silence shortening, voice enhancement and normalization. Show `silenceSaved` as a silence-savings readout.
+- `setMode(.original)` plays the file at 1x without processing, so listeners can compare. `.processed` restores their settings.
+
+### Speech stays clear and even from one episode to the next.
+
+Balance speech levels and reduce distracting background noise or harshness across recordings.
+
+- `voiceEnhancement` with `normalizationEnabled` and `normalizationTargetLUFS` brings shows to a similar level. Add `noiseReduction` for steady background noise, `deEsser` for sibilance and `mono` to center a recording heard on one side.
+- Drive a loudness meter from `measuredLoudness` or `AudioProcessor.loudness`.
+
+### Listeners set their own tone and save it.
+
+Let listeners shape the sound and return to their preferred settings.
+
+- Build an EQ editor from up to 12 `EQBand` values, with each shape chosen by `EQBand.Kind`. `equalizerGainDB(at:sampleRate:)` returns the custom EQ curve to draw.
+- `AudioConfiguration` is `Codable`, so your app can store named presets itself. Check them with `validated()` before applying.
+
+### Scrubbers, chapters and transcripts show the right time after speed changes and removed pauses.
+
+Use original-recording time to connect your app’s scrubber, chapter navigation and transcript display.
+
+- `LocalFilePlayer` `position`, `duration` and `seek(to:)` use original-media seconds, so they match your own chapter and transcript times.
+- In your own pipeline, `AudioTimeline.original(at:)` maps played output frames to source frames. Divide by the sample rate for seconds. Call `played(_:)` as playback advances and query `silenceSaved(at:)` at the played frame count for silence savings the listener has heard.
+
+### Your existing player or exporter gets the same speech processing.
+
+Add speech processing to your playback or export pipeline while keeping your decoder and output.
+
+- Pass decoded chunks to `AudioProcessor.process(_:)` and `finish()`, then send the output to your player or file writer. Your app keeps its decoder, output and encoder.
+- `SBEngine` provides the same processing from C.
 
 ## Implementation guide
 
