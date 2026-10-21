@@ -1,0 +1,19 @@
+name: Verify
+on: [push, pull_request]
+jobs:
+  c-engine:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh Tests/CEngine/run.sh
+      - run: python3 Scripts/check-independence.py
+  apple:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift --version
+      - run: swift test --no-parallel
+      - run: sh Scripts/build-demo.sh
