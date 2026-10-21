@@ -42,7 +42,11 @@ public final class LocalFilePlayer {
     public private(set) var fileURL: URL?
     public private(set) var mode: PlaybackMode = .processed
     public var isPlaying: Bool { state == .playing }
+    /// Original-media seconds advanced per heard output second over the last ~2.5 seconds.
+    /// Before any output is heard, uses the selected rate (or 1x in Original mode).
+    public var effectiveRate: Double { mode == .original ? 1 : heardEffectiveRate ?? configuration.rate }
 
+    private var heardEffectiveRate: Double?
     @ObservationIgnored private var worker: FileWorker?
     @ObservationIgnored private var progressTask: Task<Void, Never>?
     @ObservationIgnored private var generation: UInt64 = 0
@@ -74,6 +78,7 @@ public final class LocalFilePlayer {
         wantsPlaying = false
         self.fileURL = fileURL
         position = 0; duration = 0; silenceSaved = 0; sampleRate = 0; measuredLoudness = nil
+        heardEffectiveRate = nil
         state = .loading
         do {
             try Task.checkCancellation()
@@ -118,12 +123,14 @@ public final class LocalFilePlayer {
     public func setMode(_ mode: PlaybackMode) {
         guard self.mode != mode else { return }
         self.mode = mode
+        heardEffectiveRate = nil
         worker?.update(configuration: configuration, mode: mode, revision: commandRevision)
     }
 
     public func seek(to seconds: TimeInterval) {
         guard let worker else { return }
         position = min(duration, max(0, seconds.isFinite ? seconds : 0))
+        heardEffectiveRate = nil
         if state == .ended { state = wantsPlaying ? .playing : .paused }
         commandRevision &+= 1
         worker.seek(to: position, revision: commandRevision)
@@ -133,7 +140,7 @@ public final class LocalFilePlayer {
         guard let worker else { return }
         if case .failed = state { return }
         commandRevision &+= 1
-        if state == .ended { position = 0; worker.seek(to: 0, revision: commandRevision) }
+        if state == .ended { position = 0; heardEffectiveRate = nil; worker.seek(to: 0, revision: commandRevision) }
         wantsPlaying = true
         state = .playing
         worker.play(revision: commandRevision)
@@ -155,6 +162,7 @@ public final class LocalFilePlayer {
         worker?.shutdown(); worker = nil
         wantsPlaying = false
         fileURL = nil; position = 0; duration = 0; silenceSaved = 0; sampleRate = 0; measuredLoudness = nil
+        heardEffectiveRate = nil
         state = .idle
     }
 
@@ -199,6 +207,7 @@ public final class LocalFilePlayer {
     private func apply(_ snapshot: FileSnapshot) {
         position = snapshot.position; duration = snapshot.duration; sampleRate = snapshot.sampleRate
         silenceSaved = snapshot.saved; measuredLoudness = snapshot.loudness
+        heardEffectiveRate = snapshot.effectiveRate
     }
 
     /// Internal inspection of the serial worker's effective state, including pending transitions.
@@ -248,6 +257,39 @@ private struct FileSnapshot: Sendable {
     let sampleRate: Double
     let saved: Double
     let loudness: Double?
+    let effectiveRate: Double?
+}
+
+/// Keeps exact heard source/output endpoint pairs independently of AudioTimeline's shorter
+/// pruning horizon. Whole intervals avoid inventing source positions across a discrete cut.
+/// Output frames, rather than wall time, make pauses inert. Each output generation resets it.
+struct EffectivePlaybackRateWindow {
+    private struct Point {
+        let output: Int64
+        let source: Double
+    }
+    private var points: [Point] = []
+    private var windowFrames: Int64 = 1
+
+    mutating func reset(sampleRate: Double, sourceFrame: Double) {
+        windowFrames = max(1, Int64(sampleRate * 2.5))
+        points = [Point(output: 0, source: sourceFrame)]
+    }
+
+    mutating func record(outputFrame: Int64, sourceFrame: Double) {
+        guard let last = points.last, outputFrame > last.output,
+              sourceFrame.isFinite, sourceFrame >= last.source else { return }
+        points.append(Point(output: outputFrame, source: sourceFrame))
+        let cutoff = outputFrame - windowFrames
+        // Retain the endpoint just before the window boundary, giving a window of at least
+        // 2.5 seconds once warm. At normal refill cadence the excess is only one buffer.
+        while points.count > 2, points[1].output <= cutoff { points.removeFirst() }
+    }
+
+    var rate: Double? {
+        guard let first = points.first, let last = points.last, last.output > first.output else { return nil }
+        return (last.source - first.source) / Double(last.output - first.output)
+    }
 }
 
 private enum FileEvent: Sendable {
@@ -287,6 +329,7 @@ private final class FileWorker: @unchecked Sendable {
     private var baseOriginal: Int64 = 0
     private var scheduled: Int64 = 0
     private var lastPlayed: Int64 = 0
+    private var effectiveRateWindow = EffectivePlaybackRateWindow()
     private var pending = 0
     // One-buffer lookahead makes the actual final PCM buffer a played-back completion.
     private var pendingTail: AVAudioPCMBuffer?
@@ -478,8 +521,10 @@ private final class FileWorker: @unchecked Sendable {
            let time = node.playerTime(forNodeTime: render), time.isSampleTimeValid {
             lastPlayed = min(scheduled, max(lastPlayed, max(0, time.sampleTime)))
         }
-        if let timeline { return timeline.played(lastPlayed) }
-        return lastPlayed
+        let played = timeline?.played(lastPlayed) ?? lastPlayed
+        effectiveRateWindow.record(outputFrame: played,
+            sourceFrame: timeline?.original(at: played) ?? Double(baseOriginal + played))
+        return played
     }
 
     private func savedFrames() -> Double {
@@ -492,7 +537,8 @@ private final class FileWorker: @unchecked Sendable {
         let original = ended ? Double(totalFrames) : (timeline?.original(at: played) ?? Double(baseOriginal + played))
         return FileSnapshot(position: min(Double(totalFrames), max(0, original)) / sampleRate,
                             duration: Double(totalFrames) / sampleRate, sampleRate: sampleRate,
-                            saved: (savedBefore + (timeline?.silenceSaved(at: played) ?? 0)) / sampleRate, loudness: loudness)
+                            saved: (savedBefore + (timeline?.silenceSaved(at: played) ?? 0)) / sampleRate, loudness: loudness,
+                            effectiveRate: mode == .processed ? effectiveRateWindow.rate : nil)
     }
 
     private func reset(at frame: Int64, preservingSavings: Bool = true, saved: Double? = nil) throws {
@@ -502,6 +548,7 @@ private final class FileWorker: @unchecked Sendable {
         generation &+= 1; fadeToken &+= 1; configurationRevision &+= 1
         configurationPending = false
         scheduled = 0; pending = 0; pendingTail = nil; lastPlayed = 0; nextRead = frame; baseOriginal = frame
+        effectiveRateWindow.reset(sampleRate: sampleRate, sourceFrame: Double(frame))
         eof = false; ended = false; savedBefore = heard
         downmixer?.reset()
         // Read heard savings using the old clock before adopting the latest requested mode.
