@@ -13,7 +13,7 @@ mkdir -p "$build"
 compiler=${CC:-clang}
 platform_libs=""
 if [ "$(uname -s)" = Darwin ]; then platform_libs="-framework Accelerate"; fi
-for gate in stretch dsp engine eq_response fft correlation mono timeline bridge_eof; do
+for gate in stretch dsp engine eq_response fft correlation mono timeline bridge_eof pause; do
     printf '\nCompiling %s gate with %s\n' "$gate" "$compiler"
     stretcher_source="$src/sb_stretcher.c"
     dsp_source="$src/sb_dsp.c"
@@ -35,4 +35,4 @@ for gate in stretch dsp engine eq_response fft correlation mono timeline bridge_
         exit 1
     fi
 done
-printf '\nAll nine SBEngine ASan+UBSan gates passed. Logs: %s\n' "$build"
+printf '\nAll ten SBEngine ASan+UBSan gates passed. Logs: %s\n' "$build"
