@@ -366,4 +366,4 @@ python3 Scripts/check-independence.py # fails on app or network dependencies in 
 
 ### License and provenance
 
-The code is MIT licensed; see `LICENSE`. The demo recording is a separate public-domain United States government work, and its status is recorded in `Examples/SidebandAudioDemo/Resources/ATTRIBUTION.md`. The code license does not apply to it. [`PROVENANCE.md`](PROVENANCE.md) describes where the source came from.
+The code is available under the [MIT license](LICENSE). The [demo recording](Examples/SidebandAudioDemo/Resources/ATTRIBUTION.md) is public domain in the United States. See [source provenance](PROVENANCE.md) for the code's origins.
