@@ -16,13 +16,29 @@ struct PlayerScreen: View {
 
 
                 settingsGroup("Playback") {
-                    ValueSlider("Rate", value: $model.configuration.rate, range: 0.5...5,
-                                step: 0.05, display: "\(rateDescription)×",
-                                accessibilityValue: "\(rateDescription) times")
-                        .accessibilityIdentifier("rateSlider")
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .firstTextBaseline, spacing: 16) {
+                            Text("Rate").frame(maxWidth: .infinity, alignment: .leading)
+                            if let effectiveRateDescription {
+                                Text(effectiveRateDescription).font(.caption).monospacedDigit()
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityIdentifier("effectivePlaybackRate")
+                            }
+                            Text("\(rateDescription)×").monospacedDigit().foregroundStyle(.secondary)
+                        }
+                        Slider(value: $model.configuration.rate, in: 0.5...5, step: 0.05)
+                            .accessibilityLabel("Rate")
+                            .accessibilityValue("\(rateDescription) times")
+                            .accessibilityIdentifier("rateSlider")
+                    }
                     Toggle("Shorten silence", isOn: $model.configuration.shortenSilence)
                         .tint(.blue)
                         .accessibilityIdentifier("shortenSilenceToggle")
+                    ValueSlider("Pause sensitivity", value: $model.configuration.silenceSensitivity,
+                                range: 0...1, step: 0.01,
+                                display: model.configuration.silenceSensitivity.formatted(.percent.precision(.fractionLength(0))))
+                        .disabled(!model.configuration.shortenSilence)
+                        .accessibilityIdentifier("silenceSensitivitySlider")
                 }
 
                 settingsGroup("Voice") {
@@ -191,9 +207,9 @@ struct PlayerScreen: View {
             .buttonStyle(.plain)
             .disabled(model.player.duration <= 0 || model.isLoading)
 
-            Text("Silence saved: \(time(model.player.silenceSaved))")
+            Text("Silence saved: \(savedDescription) s")
                 .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                .accessibilityLabel("Silence saved, \(spokenTime(model.player.silenceSaved))")
+                .accessibilityLabel("Silence saved, \(savedDescription) seconds")
                 .accessibilityIdentifier("silenceSaved")
         }
         .padding(.horizontal, 16)
@@ -201,8 +217,17 @@ struct PlayerScreen: View {
         .background(.regularMaterial)
     }
 
+    private var savedDescription: String {
+        model.player.silenceSaved.formatted(.number.precision(.fractionLength(2)))
+    }
+
     private var rateDescription: String {
         model.configuration.rate.formatted(.number.precision(.fractionLength(2)))
+    }
+
+    private var effectiveRateDescription: String? {
+        guard model.configuration.shortenSilence, model.player.mode == .processed else { return nil }
+        return "Effective \(model.player.effectiveRate.formatted(.number.precision(.fractionLength(2))))×"
     }
 
     private func settingsGroup<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
