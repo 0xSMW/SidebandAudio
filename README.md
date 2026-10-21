@@ -31,7 +31,7 @@ Choose `SidebandAudioPlayer` to play local files, `SidebandAudio` to process PCM
 
 Combine speed, silence shortening, speech processing, and EQ in one `AudioConfiguration`.
 
-### Listeners finish episodes sooner.
+### Listeners finish episodes sooner
 
 Combine faster playback with shorter pauses so listeners can finish long recordings in less time.
 
@@ -39,28 +39,28 @@ Combine faster playback with shorter pauses so listeners can finish long recordi
 - Adjust `silenceSensitivity` to detect noisier pauses, and show `effectiveRate` beside the selected speed to reflect heard speed and silence savings together.
 - `setMode(.original)` plays the file at 1x without processing, so listeners can compare. `.processed` restores their settings.
 
-### Speech stays clear and even from one episode to the next.
+### Speech stays clear and even from one episode to the next
 
 Balance speech levels and reduce distracting background noise or harshness across recordings.
 
 - `voiceEnhancement` with `normalizationEnabled` and `normalizationTargetLUFS` brings shows to a similar level. Add `noiseReduction` for steady background noise, `deEsser` for sibilance, and `mono` to center a recording heard on one side.
 - Drive a loudness meter from `measuredLoudness` or `AudioProcessor.loudness`.
 
-### Listeners set their own tone and save it.
+### Listeners set their own tone and save it
 
 Let listeners shape the sound and return to their preferred settings.
 
 - Build an EQ editor from up to 12 `EQBand` values, with each shape chosen by `EQBand.Kind`. `equalizerGainDB(at:sampleRate:)` returns the custom EQ curve to draw.
 - `AudioConfiguration` is `Codable`, so your app can store named presets itself. Check them with `validated()` before applying.
 
-### Scrubbers, chapters, and transcripts show the right time after speed changes and removed pauses.
+### Scrubbers, chapters, and transcripts show the right time after speed changes and removed pauses
 
 Use original-recording time to connect your app’s scrubber, chapter navigation, and transcript display.
 
 - `LocalFilePlayer` `position`, `duration`, and `seek(to:)` use original-media seconds, so they match your own chapter and transcript times.
 - In your own pipeline, `AudioTimeline.original(at:)` maps played output frames to source frames. Divide by the sample rate for seconds. Call `played(_:)` as playback advances and query `silenceSaved(at:)` at the played frame count for silence savings the listener has heard.
 
-### Your existing player or exporter gets the same speech processing.
+### Your existing player or exporter gets the same speech processing
 
 Add speech processing to your playback or export pipeline while keeping your decoder and output.
 
