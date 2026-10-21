@@ -10,9 +10,8 @@ on the Moon, from his Special Message to Congress on May 25, 1961.
 - Rights: the source identifies the recording as a United States government
   work in the public domain in the United States (PD-USGov-NASA).
 - Preparation: decoded to mono, 44.1 kHz, signed 16-bit PCM WAV with FFmpeg.
-  One second of digital silence was added before and after the speech to make
-  the silence-shortening comparison repeatable despite noise in the archival
-  recording. No loudness processing or silence removal was applied.
+  The original 11.480544 seconds of decoded PCM are retained without added
+  padding, loudness processing, or silence removal.
 
 The recording is included locally. The demo makes no network requests.
 The sample's public-domain status is separate from the repository's MIT code license.
