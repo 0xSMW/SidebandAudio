@@ -311,6 +311,10 @@ swift test --no-parallel                      # Swift processor and player tests
 python3 Scripts/check-independence.py         # fails on app or network dependencies in Sources/ and Package.swift
 ```
 
-### License and provenance
+### Engine implementation
 
-The code is available under the [MIT license](LICENSE). The [demo recording](Examples/SidebandAudioDemo/Resources/ATTRIBUTION.md) is public domain in the United States. See [source provenance](PROVENANCE.md) for the code's origins.
+The engine is an original C11 implementation. Apple builds use Accelerate for FFTs and correlation. A portable scalar implementation uses the C standard library and libm. The optional player uses AVFoundation for decoding and audio output.
+
+### License
+
+The code is available under the [MIT license](LICENSE). The [demo recording](Examples/SidebandAudioDemo/Resources/ATTRIBUTION.md) is public domain in the United States.
