@@ -14,17 +14,17 @@ Choose `SidebandAudioPlayer` to play local files, `SidebandAudio` to process PCM
 </picture>
 
 - `SidebandAudio` (Swift, Foundation)
-  - Settings: `AudioConfiguration` holds the speech controls. `rate` is a 0.5...5 speed multiplier, `noiseReduction` is 0...1, and `normalizationTargetLUFS` is in LUFS. Up to 12 `EQBand` values set frequency in Hz, gain in dB, and unitless Q. `EQBand.Kind` selects the filter shape and `DeEsser` selects sibilance reduction strength.
+  - Settings: `AudioConfiguration` holds the speech controls. `rate` is a 0.5...5 speed multiplier, `silenceSensitivity` and `noiseReduction` are 0...1, and `normalizationTargetLUFS` is in LUFS. Up to 12 `EQBand` values set frequency in Hz, gain in dB, and unitless Q. `EQBand.Kind` selects the filter shape and `DeEsser` selects sibilance reduction strength.
   - Processing: `AudioProcessor` takes planar Float32 mono or stereo PCM at 8...192 kHz and returns audio at the same sample rate and channel count. `ProcessedAudio` owns its buffers. `ProcessedAudioView` borrows buffers valid only until the callback returns. Each output frame has a `sourceFrames` position and cumulative `silenceSavedFrames` since reset, both in original-media frames. Silence savings exclude time saved by speed. A frame is one sample per channel.
   - Errors: `AudioProcessingError` identifies invalid formats, settings, and input, stalled processing, or failed allocations.
   - Clock: `AudioTimeline` maps the number of output frames actually played to file position and heard silence savings, both in source frames. Divide by the sample rate for seconds.
 - `SidebandAudioPlayer` (Swift, AVFoundation, Observation)
-  - Playback: `LocalFilePlayer` loads, plays, pauses, and seeks local files. It is `@MainActor` and `@Observable`. `position` and `duration` use original-media seconds. `silenceSaved` counts heard savings in seconds. `measuredLoudness` is a LUFS estimate.
+  - Playback: `LocalFilePlayer` loads, plays, pauses, and seeks local files. It is `@MainActor` and `@Observable`. `position` and `duration` use original-media seconds. `silenceSaved` counts heard savings in seconds. `effectiveRate` combines speed and heard silence savings as a speed multiplier. `measuredLoudness` is a LUFS estimate.
   - State: `PlaybackMode` selects processed audio or the original at 1x without DSP. `PlaybackState` reports playback status and `PlayerFailure` describes failures. Your app handles `AVAudioSession`, interruptions, and system media controls.
 - `SBEngine` (C11, libc and libm, Accelerate on Apple platforms)
   - Lifecycle: `sb_engine_create` allocates an engine. `sb_engine_push` returns the accepted input-frame count, so read output before retrying the remainder. `sb_engine_read` writes PCM and source-position and silence-savings metadata. After `sb_engine_finish`, keep reading until `sb_engine_is_drained` returns nonzero, then call `sb_engine_destroy`.
   - Settings: `sb_engine_configure` applies `SBEngineConfig`. `sb_engine_config_set_band` writes an `SBEngineEQBand`.
-  - Measurements: `sb_engine_loudness` returns a LUFS estimate. `sb_engine_latency` returns DSP latency in source frames.
+  - Measurements: `sb_engine_loudness` returns a LUFS estimate. `sb_engine_latency` returns DSP and detector latency in source frames.
   - Source clock: `SBTimeline` and `sb_timeline_*` provide the C clock interface. `SBTimelineRun` stores compressed mappings from output frames to source position and removed silence.
 
 ## Use cases
@@ -36,6 +36,7 @@ Combine speed, silence shortening, speech processing, and EQ in one `AudioConfig
 Combine faster playback with shorter pauses so listeners can finish long recordings in less time.
 
 - Start with `.speech`, increase pitch-preserving `rate`, and apply the configuration with `LocalFilePlayer.configure(_:)`. The preset combines silence shortening, voice enhancement, and normalization. Show `silenceSaved` as a silence-savings readout.
+- Adjust `silenceSensitivity` to detect noisier pauses, and show `effectiveRate` beside the selected speed to reflect heard speed and silence savings together.
 - `setMode(.original)` plays the file at 1x without processing, so listeners can compare. `.processed` restores their settings.
 
 ### Speech stays clear and even from one episode to the next.
@@ -97,6 +98,7 @@ let gainAt3k = try accepted.equalizerGainDB(at: 3_000, sampleRate: 44_100)
 |---|---|---|---|
 | `rate` | `0.5...5`, pitch preserved | `1` | `1` |
 | `shortenSilence` | `Bool` | `false` | `true` |
+| `silenceSensitivity` | `0...1`, noise-aware pause detection | `0.5` | `0.5` |
 | `voiceEnhancement` | `Bool`, voice EQ and compression | `false` | `true` |
 | `mono` | `Bool`, averages both channels | `false` | `false` |
 | `noiseReduction` | `0...1` | `0` | `0` |
@@ -108,6 +110,8 @@ let gainAt3k = try accepted.equalizerGainDB(at: 3_000, sampleRate: 44_100)
 `EQBand(id:kind:frequency:q:gainDB:)` defaults to a `.peak` band at 1,000 Hz, Q 0.707, and 0 dB, and is `Identifiable` by its `UUID`. Ranges are `frequency` 20...20,000 Hz, `q` 0.3...8, and `gainDB` -12...12. `EQBand.Kind` is `.peak`, `.lowPass`, `.highPass`, `.bandPass`, `.notch`, `.lowShelf`, or `.highShelf`.
 
 `validated()` returns the configuration unchanged or throws `AudioProcessingError.invalidConfiguration(field)`, where `field` names the problem, such as `"rate"` or `"duplicate equalizer id"`. It rejects non-finite and out-of-range values and never clamps them.
+
+`silenceSensitivity` selects strict quiet-only detection at 0 and adaptive noisy-pause detection above 0. Higher values allow noisier pauses independently of `noiseReduction`. Adaptive detection analyzes the original input in 10 ms windows, requires 200 ms of confirmed quiet, and retains 60 ms guards at each end. Its 240 ms lookahead is included in reported latency. Saved configurations missing `silenceSensitivity` decode with the 0.5 default.
 
 `equalizerGainDB(at:sampleRate:)` returns the custom EQ response in dB for drawing a curve, excluding Voice Boost and dynamics. It validates the configuration and throws `.invalidFormat` unless the sample rate is 8...192 kHz and `0 < frequency < sampleRate / 2`. It can return `-infinity` at a notch center, so clip the chart yourself.
 
@@ -180,6 +184,7 @@ Observable properties refresh about every 250 ms:
 | `fileURL` | Loaded file, or `nil` |
 | `position`, `duration` | Original-media seconds, independent of rate and removed silence |
 | `silenceSaved` | Seconds of removed silence the listener has heard. Excludes time saved by `rate`. Carries across seeks and mode changes, resets on `load` and `stop` |
+| `effectiveRate` | Original-media progress divided by actual heard output duration over roughly the last 2.5 output seconds. Includes speed and silence shortening, falls back to the selected rate before playback, and returns 1 in Original mode. Its measurement window resets after seeks and output-generation resets |
 | `sampleRate` | File sample rate, or 0 before load |
 | `measuredLoudness` | Loudness estimate in LUFS, or `nil` until valid |
 
@@ -228,7 +233,7 @@ try processor.finish { view in
 - `process(_:)` needs exactly `channelCount` arrays of equal length. In `process(left:right:frames:consume:)`, `right` may be `nil` for mono. A non-finite sample rejects the whole call with `.invalidInput`. Otherwise every frame is accepted, and `consume` may run several times or not at all.
 - `finish()` and `finish(consume:)` end input and drain the rest. Skip them and the last audio stays buffered. A repeat call after a full drain does nothing, and after a throwing callback it resumes the drain. `isFinished` turns true when the drain completes.
 - `reset(at:seedLoudness:) throws` starts a new stream at an original-media frame, default 0, and keeps the settings. `seedLoudness` in LUFS starts normalization from a known level. A negative frame or non-finite seed throws `.invalidInput`. After finish starts, `process` and `configure` throw `.finished` until you reset. To seek, call `try processor.reset(at: frame, seedLoudness: processor.loudness)`.
-- `loudness` is the LUFS estimate, or `nil` until valid. `latencyFrames` is DSP latency in source frames, and the stretcher buffers more on top. Latency delays output but does not shift timestamps.
+- `loudness` is the LUFS estimate, or `nil` until valid. `latencyFrames` is DSP and detector latency in source frames, and the stretcher buffers more on top. Latency delays output but does not shift timestamps.
 
 `ProcessedAudio` owns `channels: [[Float]]`, `sourceFrames: [Double]`, and `silenceSavedFrames: [Double]`, with a `frameCount` and public initializer. It is `Sendable`. `ProcessedAudioView` exposes `left`, `right`, `sourceFrames`, and `silenceSavedFrames` as borrowed buffers, plus a `frameCount`. Copy any buffers you need after the callback returns. For mono input `right` aliases `left`.
 
@@ -321,15 +326,15 @@ int process_file(void) {
 | Function | Behavior |
 |---|---|
 | `sb_engine_create(sample_rate, channels, max_input_frames)` | 8...192 kHz, 1 or 2 channels, `max_input_frames` 1...1,048,576. That value sizes internal buffering and does not limit push length. Returns `NULL` for a bad format or failed allocation |
-| `sb_engine_default_config()` | Rate 1, Smart Speed and Voice Boost on, `normalization_mode` 0 (follow Voice Boost), target -14 LUFS. This differs from Swift `AudioConfiguration()`, which maps to mode 1 (off) or 2 (custom target) |
+| `sb_engine_default_config()` | Rate 1, Smart Speed and Voice Boost on, `silence_sensitivity` 0.5, `normalization_mode` 0 (follow Voice Boost), target -14 LUFS. This differs from Swift `AudioConfiguration()`, which maps to mode 1 (off) or 2 (custom target) |
 | `sb_engine_config_set_band(config, index, type, frequency, q, gain_db)` | Writes band `index` below 12 and raises `eq_count` to include it. Types are 0 peak, 1 low-pass, 2 high-pass, 3 band-pass, 4 notch, 5 low shelf, and 6 high shelf, matching `EQBand.Kind` raw values |
-| `sb_engine_configure(engine, config)` | Returns 0 for `NULL`, a rate outside 0.5...5, or more than 12 bands. It checks nothing else, so apply the `validated()` ranges yourself |
+| `sb_engine_configure(engine, config)` | Returns 0 for `NULL`, a non-finite or out-of-range rate or `silence_sensitivity`, or more than 12 bands. Rate must be 0.5...5 and sensitivity 0...1. Apply the other `validated()` ranges yourself |
 | `sb_engine_reset(engine, original_frame)` | Starts a stream at an original-media frame. Keeps settings and clears saved-frame counters. Required before a new stream, a seek, or configuring after finish |
 | `sb_engine_seed_loudness(engine, lufs)` | Optional. Call after reset or configure and before the first push. Invalid values are ignored |
 | `sb_engine_push(engine, left, right, frames)` | Returns accepted frames and never discards the rest. On a partial or zero return, read output, then push the unaccepted suffix. `right` may be `NULL` for mono. Returns 0 after finish |
 | `sb_engine_read(engine, left, right, source_frames, silence_saved_frames, capacity)` | Writes up to `capacity` frames of PCM and per-frame metadata with the same meaning as the Swift view. Every buffer except a mono `right` must be non-`NULL` |
 | `sb_engine_finish`, `sb_engine_is_drained` | Finish ends input. Keep reading until `is_drained` returns nonzero |
-| `sb_engine_loudness`, `sb_engine_latency` | LUFS estimate, -160 until valid. DSP latency in source frames |
+| `sb_engine_loudness`, `sb_engine_latency` | LUFS estimate, -160 until valid. DSP and detector latency in source frames |
 | `sb_engine_custom_eq_gain_db(config, sample_rate, frequency)` | C form of `equalizerGainDB`. Returns `NAN` for invalid arguments. Needs no engine and allocates nothing |
 | `sb_engine_destroy` | Frees the engine. Accepts `NULL` |
 
@@ -346,7 +351,7 @@ The timeline functions behind `AudioTimeline`:
 
 Open `Examples/SidebandAudioDemo/SidebandAudioDemo.xcodeproj` and run the `SidebandAudioDemo` scheme on iOS 17 or later. Device builds need a signing team. `sh Scripts/build-demo.sh [destination]` builds an unsigned Release build, by default for `generic/platform=iOS Simulator`.
 
-Adjust settings while playing the bundled sample or an imported file. Switch between Processed and Original to compare the result.
+Adjust settings while playing the bundled sample or an imported file. Pause sensitivity defaults to 50%. Higher values shorten noisier pauses, with 100% the most aggressive setting. The selected speed stays visible beside the live effective rate, and silence savings show fractional seconds. Switch between Processed and Original to compare the result.
 
 From the package root:
 
