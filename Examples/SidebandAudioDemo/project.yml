@@ -1,0 +1,55 @@
+name: SidebandAudioDemo
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "26.0"
+packages:
+  SidebandAudio:
+    path: ../..
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    PRODUCT_BUNDLE_IDENTIFIER: app.sideband.audio.demo
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+    TARGETED_DEVICE_FAMILY: "1,2"
+    CODE_SIGN_STYLE: Automatic
+targets:
+  SidebandAudioDemo:
+    type: application
+    platform: iOS
+    info:
+      path: Info.plist
+      properties:
+        UIBackgroundModes: [audio]
+        UILaunchScreen: {}
+    sources:
+      - path: SidebandAudioDemoApp.swift
+      - path: DemoModel.swift
+      - path: Views
+      - path: Resources
+        excludes: ["ATTRIBUTION.md"]
+    dependencies:
+      - package: SidebandAudio
+        product: SidebandAudio
+      - package: SidebandAudio
+        product: SidebandAudioPlayer
+  SidebandAudioDemoUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: SidebandAudioDemo
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.sideband.audio.demo.uitests
+schemes:
+  SidebandAudioDemo:
+    build:
+      targets:
+        SidebandAudioDemo: all
+    test:
+      targets: [SidebandAudioDemoUITests]

@@ -1,0 +1,483 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		14C86AF51DE8D6F4E5ACDAC3 /* PlayerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C26CB087A9CEBF4C5C88F39 /* PlayerUITests.swift */; };
+		4FF11123347A2C7559DB9D02 /* EQBandEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C39437BC119F915AFBA3FAE /* EQBandEditor.swift */; };
+		631EC84251C0A403130C9C94 /* SidebandAudioPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = 1109391DA4D611133404B80E /* SidebandAudioPlayer */; };
+		9C8B99D602D1279964922395 /* DemoModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3483A0F487235CB5DB7D548 /* DemoModel.swift */; };
+		AC6958C6915C944573486EFA /* MoonChallenge.wav in Resources */ = {isa = PBXBuildFile; fileRef = D6926B535D278240EA7DBFCD /* MoonChallenge.wav */; };
+		AF3CA6D3CB59C383810C474F /* PlayerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838B4290A3DE1E9AC23C9F3C /* PlayerScreen.swift */; };
+		C8080AEBB46252C8F2BE42D8 /* SidebandAudioDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D105E261D923FAF93555D8 /* SidebandAudioDemoApp.swift */; };
+		E65BBE8008DF018D9C600D4C /* SidebandAudio in Frameworks */ = {isa = PBXBuildFile; productRef = 4CCDD52B5671920550CA87B9 /* SidebandAudio */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		540E7290B4BCDDAB1655AF81 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E9CC06D4E553BD80716373E3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DC38C00837E8D0217366C8BF;
+			remoteInfo = SidebandAudioDemo;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		39D105E261D923FAF93555D8 /* SidebandAudioDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebandAudioDemoApp.swift; sourceTree = "<group>"; };
+		4AB2E8219F276C299040F600 /* SidebandAudio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SidebandAudio; path = ../..; sourceTree = SOURCE_ROOT; };
+		5C39437BC119F915AFBA3FAE /* EQBandEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EQBandEditor.swift; sourceTree = "<group>"; };
+		70180F74C302B9203D3EBB18 /* SidebandAudioDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SidebandAudioDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C26CB087A9CEBF4C5C88F39 /* PlayerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerUITests.swift; sourceTree = "<group>"; };
+		7D45EDB91925C3778A6E4879 /* SidebandAudioDemoUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SidebandAudioDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		838B4290A3DE1E9AC23C9F3C /* PlayerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerScreen.swift; sourceTree = "<group>"; };
+		A3483A0F487235CB5DB7D548 /* DemoModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoModel.swift; sourceTree = "<group>"; };
+		D6926B535D278240EA7DBFCD /* MoonChallenge.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = MoonChallenge.wav; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E0A77974AB4CA1C4EC036AF9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E65BBE8008DF018D9C600D4C /* SidebandAudio in Frameworks */,
+				631EC84251C0A403130C9C94 /* SidebandAudioPlayer in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		18651C08BC58DDE01A1765F0 = {
+			isa = PBXGroup;
+			children = (
+				A3483A0F487235CB5DB7D548 /* DemoModel.swift */,
+				39D105E261D923FAF93555D8 /* SidebandAudioDemoApp.swift */,
+				90FB730EDED059F838A59720 /* Packages */,
+				9288D543717D898F35C5DAAA /* Resources */,
+				C10181BD62F0F71E0C4289CA /* Tests */,
+				2EAD95AC0D7545C1B512BAF1 /* Views */,
+				FCA60F84D33B6D3A75F97527 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2EAD95AC0D7545C1B512BAF1 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				5C39437BC119F915AFBA3FAE /* EQBandEditor.swift */,
+				838B4290A3DE1E9AC23C9F3C /* PlayerScreen.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		90FB730EDED059F838A59720 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				4AB2E8219F276C299040F600 /* SidebandAudio */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		9288D543717D898F35C5DAAA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D6926B535D278240EA7DBFCD /* MoonChallenge.wav */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		C10181BD62F0F71E0C4289CA /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				7C26CB087A9CEBF4C5C88F39 /* PlayerUITests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		FCA60F84D33B6D3A75F97527 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				70180F74C302B9203D3EBB18 /* SidebandAudioDemo.app */,
+				7D45EDB91925C3778A6E4879 /* SidebandAudioDemoUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		121F13665C26C14585FFA8F6 /* SidebandAudioDemoUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C3F770056199BEFC4E7F619 /* Build configuration list for PBXNativeTarget "SidebandAudioDemoUITests" */;
+			buildPhases = (
+				2C483931B39D468E6A127A5A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				51B6B60D9EA225D3F0794EA7 /* PBXTargetDependency */,
+			);
+			name = SidebandAudioDemoUITests;
+			packageProductDependencies = (
+			);
+			productName = SidebandAudioDemoUITests;
+			productReference = 7D45EDB91925C3778A6E4879 /* SidebandAudioDemoUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		DC38C00837E8D0217366C8BF /* SidebandAudioDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 866390EB1B5C02DBE504EBDD /* Build configuration list for PBXNativeTarget "SidebandAudioDemo" */;
+			buildPhases = (
+				84A297A7289E314C32612C51 /* Sources */,
+				A9AB4CD02D2637D6385BA1A1 /* Resources */,
+				E0A77974AB4CA1C4EC036AF9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SidebandAudioDemo;
+			packageProductDependencies = (
+				4CCDD52B5671920550CA87B9 /* SidebandAudio */,
+				1109391DA4D611133404B80E /* SidebandAudioPlayer */,
+			);
+			productName = SidebandAudioDemo;
+			productReference = 70180F74C302B9203D3EBB18 /* SidebandAudioDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E9CC06D4E553BD80716373E3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					121F13665C26C14585FFA8F6 = {
+						ProvisioningStyle = Automatic;
+						TestTargetID = DC38C00837E8D0217366C8BF;
+					};
+					DC38C00837E8D0217366C8BF = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = ADE2BDF0336D58FE314BEED0 /* Build configuration list for PBXProject "SidebandAudioDemo" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 18651C08BC58DDE01A1765F0;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				15537E33A10ACC2EE8C5FEB3 /* XCLocalSwiftPackageReference "../.." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FCA60F84D33B6D3A75F97527 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DC38C00837E8D0217366C8BF /* SidebandAudioDemo */,
+				121F13665C26C14585FFA8F6 /* SidebandAudioDemoUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A9AB4CD02D2637D6385BA1A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AC6958C6915C944573486EFA /* MoonChallenge.wav in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2C483931B39D468E6A127A5A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				14C86AF51DE8D6F4E5ACDAC3 /* PlayerUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		84A297A7289E314C32612C51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9C8B99D602D1279964922395 /* DemoModel.swift in Sources */,
+				4FF11123347A2C7559DB9D02 /* EQBandEditor.swift in Sources */,
+				AF3CA6D3CB59C383810C474F /* PlayerScreen.swift in Sources */,
+				C8080AEBB46252C8F2BE42D8 /* SidebandAudioDemoApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		51B6B60D9EA225D3F0794EA7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DC38C00837E8D0217366C8BF /* SidebandAudioDemo */;
+			targetProxy = 540E7290B4BCDDAB1655AF81 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		099A2EB8859ACC9067F60116 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.sideband.audio.demo.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SidebandAudioDemo;
+			};
+			name = Debug;
+		};
+		131D562FE8346F5E0129E4DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.sideband.audio.demo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		20B6BC6FC270A44E98CBBF38 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		72AD0D33E50879E7E5BC63D5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.sideband.audio.demo.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SidebandAudioDemo;
+			};
+			name = Release;
+		};
+		7A9E42D56538E273DA076171 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BA4C731BB82640D541C3EE80 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.sideband.audio.demo;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7C3F770056199BEFC4E7F619 /* Build configuration list for PBXNativeTarget "SidebandAudioDemoUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				099A2EB8859ACC9067F60116 /* Debug */,
+				72AD0D33E50879E7E5BC63D5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		866390EB1B5C02DBE504EBDD /* Build configuration list for PBXNativeTarget "SidebandAudioDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				20B6BC6FC270A44E98CBBF38 /* Debug */,
+				7A9E42D56538E273DA076171 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		ADE2BDF0336D58FE314BEED0 /* Build configuration list for PBXProject "SidebandAudioDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BA4C731BB82640D541C3EE80 /* Debug */,
+				131D562FE8346F5E0129E4DD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		15537E33A10ACC2EE8C5FEB3 /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1109391DA4D611133404B80E /* SidebandAudioPlayer */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SidebandAudioPlayer;
+		};
+		4CCDD52B5671920550CA87B9 /* SidebandAudio */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SidebandAudio;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E9CC06D4E553BD80716373E3 /* Project object */;
+}
