@@ -24,6 +24,10 @@ public struct EQBand: Codable, Equatable, Sendable, Identifiable {
 public struct AudioConfiguration: Codable, Equatable, Sendable {
     public var rate: Double
     public var shortenSilence: Bool
+    /// Noise-aware pause detection sensitivity, from 0 (strict quiet-only detection) to 1.
+    /// Higher values allow noisier pauses to be shortened while the detector adapts to speech and noise.
+    /// This controls pause detection independently of `noiseReduction`, which changes the audible signal.
+    public var silenceSensitivity: Double
     public var voiceEnhancement: Bool
     public var mono: Bool
     public var noiseReduction: Double
@@ -31,12 +35,32 @@ public struct AudioConfiguration: Codable, Equatable, Sendable {
     public var normalizationTargetLUFS: Double
     public var deEsser: DeEsser
     public var equalizer: [EQBand]
-    public init(rate: Double = 1, shortenSilence: Bool = false, voiceEnhancement: Bool = false,
+    public init(rate: Double = 1, shortenSilence: Bool = false, silenceSensitivity: Double = 0.5,
+                voiceEnhancement: Bool = false,
                 mono: Bool = false, noiseReduction: Double = 0, normalizationEnabled: Bool = false,
                 normalizationTargetLUFS: Double = -14, deEsser: DeEsser = .off, equalizer: [EQBand] = []) {
         self.rate = rate; self.shortenSilence = shortenSilence; self.voiceEnhancement = voiceEnhancement
+        self.silenceSensitivity = silenceSensitivity
         self.mono = mono; self.noiseReduction = noiseReduction; self.normalizationEnabled = normalizationEnabled
         self.normalizationTargetLUFS = normalizationTargetLUFS; self.deEsser = deEsser; self.equalizer = equalizer
+    }
+    private enum CodingKeys: String, CodingKey {
+        case rate, shortenSilence, silenceSensitivity, voiceEnhancement, mono, noiseReduction
+        case normalizationEnabled, normalizationTargetLUFS, deEsser, equalizer
+    }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        rate = try values.decode(Double.self, forKey: .rate)
+        shortenSilence = try values.decode(Bool.self, forKey: .shortenSilence)
+        silenceSensitivity = values.contains(.silenceSensitivity)
+            ? try values.decode(Double.self, forKey: .silenceSensitivity) : 0.5
+        voiceEnhancement = try values.decode(Bool.self, forKey: .voiceEnhancement)
+        mono = try values.decode(Bool.self, forKey: .mono)
+        noiseReduction = try values.decode(Double.self, forKey: .noiseReduction)
+        normalizationEnabled = try values.decode(Bool.self, forKey: .normalizationEnabled)
+        normalizationTargetLUFS = try values.decode(Double.self, forKey: .normalizationTargetLUFS)
+        deEsser = try values.decode(DeEsser.self, forKey: .deEsser)
+        equalizer = try values.decode([EQBand].self, forKey: .equalizer)
     }
     public static var speech: Self {
         Self(shortenSilence: true, voiceEnhancement: true, normalizationEnabled: true)
@@ -47,6 +71,7 @@ public struct AudioConfiguration: Codable, Equatable, Sendable {
             guard value.isFinite, range.contains(value) else { throw AudioProcessingError.invalidConfiguration(name) }
         }
         try require(rate, 0.5...5, "rate")
+        try require(silenceSensitivity, 0...1, "silenceSensitivity")
         try require(noiseReduction, 0...1, "noiseReduction")
         try require(normalizationTargetLUFS, -20 ... -6, "normalizationTargetLUFS")
         guard equalizer.count <= 12 else { throw AudioProcessingError.invalidConfiguration("equalizer count") }
@@ -76,6 +101,7 @@ public struct AudioConfiguration: Codable, Equatable, Sendable {
     func engineConfiguration() -> SBEngineConfig {
         var config = sb_engine_default_config()
         config.rate = Float(rate); config.smart_speed = shortenSilence ? 1 : 0
+        config.silence_sensitivity = Float(silenceSensitivity)
         config.voice_boost = voiceEnhancement ? 1 : 0; config.mono = mono ? 1 : 0
         config.noise_reduction = Float(noiseReduction)
         config.normalization_mode = normalizationEnabled ? 2 : 1
