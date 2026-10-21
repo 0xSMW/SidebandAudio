@@ -18,6 +18,7 @@ typedef struct {
     int deesser; /* 0: off; 1: normal; 2: strong */
     size_t eq_count;
     SBEngineEQBand eq[SB_ENGINE_MAX_EQ_BANDS]; /* peak, LP, HP, BP, notch, LS, HS */
+    float silence_sensitivity; /* 0: strict quiet-only, 0...1: adaptive noisy-pause sensitivity */
 } SBEngineConfig;
 /* Clock runs are caller-owned POD values: copying a run buffer preserves value semantics.
    Construction/query/pruning allocate nothing. The builder needs at most `frames` run slots. */
@@ -68,7 +69,7 @@ size_t sb_engine_read(SBEngine *, float *left, float *right, double *source_fram
                       double *silence_saved_frames, size_t capacity);
 int sb_engine_is_drained(const SBEngine *);
 float sb_engine_loudness(const SBEngine *); /* -160 until valid */
-size_t sb_engine_latency(const SBEngine *); /* DSP latency in source frames; WSOLA also buffers grains */
+size_t sb_engine_latency(const SBEngine *); /* DSP plus adaptive detection lookahead, in source frames; WSOLA also buffers grains */
 #ifdef __cplusplus
 }
 #endif
