@@ -6,19 +6,21 @@ Sideband Audio is a Swift package for spoken-word playback on iOS and macOS. Lis
 
 ## APIs
 
-There are three library products, and each one depends on the one listed above it. Use the C engine directly, the Swift processor for PCM you decode yourself, or the local file player for AVFoundation playback.
+Choose `SidebandAudioPlayer` to play local files, `SidebandAudio` to process PCM you decode yourself, or `SBEngine` to call the engine from C. The player uses the Swift processor, which wraps the C engine.
 
-- `SBEngine` (C11, libc and libm, Accelerate on Apple platforms)
-  - Engine lifecycle: `sb_engine_create`, `sb_engine_configure`, `sb_engine_reset`, `sb_engine_seed_loudness`, `sb_engine_push`, `sb_engine_read`, `sb_engine_finish`, `sb_engine_is_drained`, `sb_engine_destroy`
-  - Measurements: `sb_engine_loudness`, `sb_engine_latency`
-  - Configuration: `SBEngineConfig`, `SBEngineEQBand`, `sb_engine_default_config`, `sb_engine_config_set_band`, `sb_engine_custom_eq_gain_db`
-  - Source clock: `SBTimeline`, `SBTimelineRun` and the `sb_timeline_*` functions
 - `SidebandAudio` (Swift, Foundation)
-  - Settings: `AudioConfiguration`, `EQBand`, `EQBand.Kind`, `DeEsser`
-  - Processing: `AudioProcessor`, `ProcessedAudio`, `ProcessedAudioView`, `AudioProcessingError`
-  - Clock: `AudioTimeline`
+  - Settings: `AudioConfiguration` holds the speech controls. `rate` is a 0.5...5 speed multiplier, `noiseReduction` is 0...1 and `normalizationTargetLUFS` is in LUFS. Up to 12 `EQBand` values set frequency in Hz, gain in dB and unitless Q. `EQBand.Kind` selects the filter shape and `DeEsser` selects sibilance reduction strength.
+  - Processing: `AudioProcessor` takes planar Float32 mono or stereo PCM at 8...192 kHz and returns audio at the same sample rate and channel count. `ProcessedAudio` owns its buffers. `ProcessedAudioView` borrows buffers valid only until the callback returns. Each output frame has a `sourceFrames` position and cumulative `silenceSavedFrames` since reset, both in original-media frames. Silence savings exclude time saved by speed. A frame is one sample per channel.
+  - Errors: `AudioProcessingError` identifies invalid formats, settings and input, stalled processing or failed allocations.
+  - Clock: `AudioTimeline` maps the number of output frames actually played to file position and heard silence savings, both in source frames. Divide by the sample rate for seconds.
 - `SidebandAudioPlayer` (Swift, AVFoundation, Observation)
-  - `LocalFilePlayer`, `PlaybackMode`, `PlaybackState`, `PlayerFailure`
+  - Playback: `LocalFilePlayer` loads, plays, pauses and seeks local files. It is `@MainActor` and `@Observable`. `position` and `duration` use original-media seconds. `silenceSaved` counts heard savings in seconds. `measuredLoudness` is a LUFS estimate.
+  - State: `PlaybackMode` selects processed audio or the original at 1x without DSP. `PlaybackState` reports playback status and `PlayerFailure` describes failures. Your app handles `AVAudioSession`, interruptions and system media controls.
+- `SBEngine` (C11, libc and libm, Accelerate on Apple platforms)
+  - Lifecycle: `sb_engine_create` allocates an engine. `sb_engine_push` returns the accepted input-frame count, so read output before retrying the remainder. `sb_engine_read` writes PCM and source-position and silence-savings metadata. After `sb_engine_finish`, keep reading until `sb_engine_is_drained` returns nonzero, then call `sb_engine_destroy`.
+  - Settings: `sb_engine_configure` applies `SBEngineConfig`. `sb_engine_config_set_band` writes an `SBEngineEQBand`.
+  - Measurements: `sb_engine_loudness` returns a LUFS estimate. `sb_engine_latency` returns DSP latency in source frames.
+  - Source clock: `SBTimeline` and `sb_timeline_*` provide the C clock interface. `SBTimelineRun` stores compressed mappings from output frames to source position and removed silence.
 
 ## Implementation guide
 
